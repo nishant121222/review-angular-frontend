@@ -1649,20 +1649,20 @@ export class PhoneEntry implements OnInit {
 
 // 12-09-2025
 // It is a final Our Sir Prooved Project with Services Calling ( Final with Services)
-
-
+/*
 import { Component, OnInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { UserService } from '../../services/user';
+import { UserService, CheckUserResponse, CreateUserResponse } from '../../services/user';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 
 @Component({
   selector: 'app-phone-entry',
@@ -1687,13 +1687,13 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       </div>
       
       <mat-card class="registration-card">
-      <div class="header">
-      <div class="icon-container">
-        <img src="Images/MiramataLogo.jpg" alt="Miramata Logo" class="logo-img" />
-      </div>
-      <h2 class="title">User Registration</h2>
-      <p class="subtitle">Please enter your details to continue</p>
-    </div>
+        <div class="header">
+          <div class="icon-container">
+            <img src="Images/MiramataLogo.jpg" alt="Miramata Logo" class="logo-img" />
+          </div>
+          <h2 class="title">User Registration</h2>
+          <p class="subtitle">Please enter your details to continue</p>
+        </div>
     
         <form [formGroup]="form" (ngSubmit)="onSubmit()" class="form">
           <!-- Name Field -->
@@ -1768,26 +1768,9 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       background: rgba(255, 255, 255, 0.1);
     }
 
-    .circle-1 {
-      width: 300px;
-      height: 300px;
-      top: -150px;
-      right: -150px;
-    }
-
-    .circle-2 {
-      width: 200px;
-      height: 200px;
-      bottom: -100px;
-      left: -100px;
-    }
-
-    .circle-3 {
-      width: 150px;
-      height: 150px;
-      top: 50%;
-      left: 10%;
-    }
+    .circle-1 { width: 300px; height: 300px; top: -150px; right: -150px; }
+    .circle-2 { width: 200px; height: 200px; bottom: -100px; left: -100px; }
+    .circle-3 { width: 150px; height: 150px; top: 50%; left: 10%; }
 
     .registration-card {
       width: 100%;
@@ -1801,24 +1784,10 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       position: relative;
     }
 
-    .header {
-      text-align: center;
-      margin-bottom: 32px;
-    }
+    .header { text-align: center; margin-bottom: 32px; }
 
-   /* .icon-container {
-      background: linear-gradient(135deg, #3f51b5, #2196f3);
-      border-radius: 50%;
-      width: 80px;
-      height: 80px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      box-shadow: 0 4px 6px rgba(63, 81, 181, 0.2);
-    }*/
     .icon-container {
-      background: white; /* remove gradient so logo looks clean */
+      background: white;
       border-radius: 0%;
       width: 100px;
       height: 100px;
@@ -1827,56 +1796,18 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       justify-content: center;
       margin: 0 auto 16px;
       box-shadow: 0 4px 6px rgba(63, 81, 181, 0.2);
-      overflow: hidden; /* keeps logo inside circle */
+      overflow: hidden;
     }
-    .logo-img {
-      width: 80%;
-      height: 80%;
-      object-fit: contain; /* keeps aspect ratio */
-    }
+    .logo-img { width: 80%; height: 80%; object-fit: contain; }
 
-    /*.icon {
-      font-size: 40px;
-      width: 40px;
-      height: 40px;
-      color: white;
-    }*/
+    .title { margin: 0 0 8px; color: #3f51b5; font-weight: 600; font-size: 26px; }
+    .subtitle { margin: 0; color: #666; font-size: 15px; font-weight: 400; }
 
-    .title {
-      margin: 0 0 8px;
-      color: #3f51b5;
-      font-weight: 600;
-      font-size: 26px;
-    }
+    .form { display: flex; flex-direction: column; gap: 20px; }
+    .full-width { width: 100%; }
 
-    .subtitle {
-      margin: 0;
-      color: #666;
-      font-size: 15px;
-      font-weight: 400;
-    }
-
-    .form {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
-
-    .full-width {
-      width: 100%;
-    }
-
-    .mat-form-field {
-      --mat-form-field-container-height: 60px;
-    }
-
-    .mat-form-field-appearance-outline .mat-form-field-outline {
-      color: rgba(63, 81, 181, 0.2);
-    }
-
-    .mat-form-field-appearance-outline.mat-focused .mat-form-field-outline-thick {
-      color: #3f51b5;
-    }
+    .mat-form-field { --mat-form-field-container-height: 60px; transition: all 0.3s ease; }
+    .mat-form-field:hover { transform: translateY(-2px); }
 
     .submit-btn {
       width: 100%;
@@ -1890,15 +1821,11 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       box-shadow: 0 4px 6px rgba(63, 81, 181, 0.2);
       transition: all 0.3s ease;
     }
-
     .submit-btn:hover:not([disabled]) {
       transform: translateY(-2px);
       box-shadow: 0 7px 14px rgba(63, 81, 181, 0.3);
     }
-
-    .submit-btn:active:not([disabled]) {
-      transform: translateY(0);
-    }
+    .submit-btn:active:not([disabled]) { transform: translateY(0); }
 
     .privacy-note {
       text-align: center;
@@ -1906,75 +1833,23 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
       padding-top: 16px;
       border-top: 1px solid rgba(0, 0, 0, 0.1);
     }
+    .privacy-note p { margin: 0; font-size: 12px; color: #666; }
+    .privacy-note a { color: #3f51b5; text-decoration: none; font-weight: 500; }
+    .privacy-note a:hover { text-decoration: underline; }
 
-    .privacy-note p {
-      margin: 0;
-      font-size: 12px;
-      color: #666;
-    }
-
-    .privacy-note a {
-      color: #3f51b5;
-      text-decoration: none;
-      font-weight: 500;
-    }
-
-    .privacy-note a:hover {
-      text-decoration: underline;
-    }
-
-    /* Mobile responsiveness */
     @media (max-width: 600px) {
-      .container {
-        padding: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      }
-
-      .registration-card {
-        padding: 24px 20px;
-        box-shadow: 0 10px 20px rgba(50, 50, 93, 0.1), 0 3px 8px rgba(0, 0, 0, 0.07);
-      }
-
-      .title {
-        font-size: 22px;
-      }
-
-      .icon-container {
-        width: 70px;
-        height: 70px;
-      }
-
-      .icon {
-        font-size: 35px;
-        width: 35px;
-        height: 35px;
-      }
-      
-      .circle-1, .circle-2, .circle-3 {
-        display: none;
-      }
+      .container { padding: 12px; }
+      .registration-card { padding: 24px 20px; }
+      .title { font-size: 22px; }
+      .icon-container { width: 70px; height: 70px; }
+      .circle-1, .circle-2, .circle-3 { display: none; }
     }
 
-    /* Animation for form elements*/
-    .mat-form-field {
-      transition: all 0.3s ease;
-    }
-
-    .mat-form-field:hover {
-      transform: translateY(-2px);
-    }
-
-    /* Focus styles for better accessibility */
-    button:focus-visible, 
-    input:focus-visible {
+    button:focus-visible, input:focus-visible {
       outline: 2px solid #3f51b5;
       outline-offset: 2px;
     }
-
-    /* Custom styles for the spinner */
-    .mat-progress-spinner circle {
-      stroke: white;
-    }
+    .mat-progress-spinner circle { stroke: white; }
   `]
 })
 export class PhoneEntry implements OnInit {
@@ -1994,55 +1869,357 @@ export class PhoneEntry implements OnInit {
       phone: ['', [Validators.required, Validators.pattern(/^(\+\d{1,3}[- ]?)?\d{10}$/)]]
     });
   }
- 
+
   onSubmit(): void {
-    if (this.form.valid) {
-      this.isLoading = true;
-      const { name, phone } = this.form.value;
-  
-      this.userService.checkPhoneExists(phone).subscribe({
-        next: (res) => {
-          this.isLoading = false;
-          if (res.returning_user) {
-            // ✅ Existing user → go to mini-game
-            this.router.navigate(
-              ['app-mini-game'],   // 🔥 removed leading slash
-              { queryParams: { phone, user_id: res.user_id } }
-            );
-          } else {
-            this.userService.createUser(name, phone).subscribe({
-              next: (newUser) => {
-                // ✅ New user → go to review form
-                this.router.navigate(
-                  ['app-review-form'],   // 🔥 removed leading slash
-                  { queryParams: { phone, user_id: newUser.id } }  // ✅ fixed user_id → id
-                );
-              },
-              error: err => {
-                console.error('Error saving user:', err);
-                this.snackBar.open(
-                  'Error saving user information. Please try again.',
-                  'Dismiss',
-                  { duration: 5000, panelClass: ['error-snackbar'] }
-                );
-              }
-            });
-          }
-        },
-        error: err => {
-          this.isLoading = false;
-          console.error('Error checking phone:', err);
-          this.snackBar.open(
-            'Error verifying phone number. Please check your connection and try again.',
-            'Dismiss',
-            { duration: 5000, panelClass: ['error-snackbar'] }
-          );
-        }
-      });
-    } else {
-      Object.keys(this.form.controls).forEach(key => {
-        this.form.get(key)?.markAsTouched();
-      });
+    if (!this.form.valid) {
+      Object.keys(this.form.controls).forEach(key =>
+        this.form.get(key)?.markAsTouched()
+      );
+      return;
     }
+
+    this.isLoading = true;
+    const { name, phone } = this.form.value;
+
+    this.userService.checkPhoneExists(phone).subscribe({
+      next: (res: CheckUserResponse) => {
+        if (res.returning_user) {
+          // ✅ Call createUser so backend can update name/business_id
+          this.userService.createUser(name, phone).subscribe({
+            next: (updatedUser: CreateUserResponse) => {
+              this.isLoading = false;
+              this.router.navigate(['spin'], {
+                queryParams: { phone, user_id: updatedUser.id }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error updating user. Please try again.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        } else {
+          this.userService.createUser(name, phone).subscribe({
+            next: (newUser: CreateUserResponse) => {
+              this.isLoading = false;
+              this.router.navigate(['review'], {
+                queryParams: { phone, user_id: newUser.id }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error saving user. Please try again.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.snackBar.open('Error verifying phone. Please check connection.', 'Dismiss', { duration: 5000 });
+      }
+    });
   }
-}  
+}
+*/
+
+// Updated 1 
+/*
+
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { UserService, CheckUserResponse, CreateUserResponse } from '../../services/user';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+
+@Component({
+  selector: 'app-phone-entry',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './phone-entry.html',
+  styleUrls: ['./phone-entry.css']
+})
+export class PhoneEntry implements OnInit {
+  form!: FormGroup;
+  isLoading = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      phone: ['', [Validators.required, Validators.pattern(/^(\+\d{1,3}[- ]?)?\d{10}$/)]]
+    });
+  }
+
+  onSubmit(): void {
+    if (!this.form.valid) {
+      Object.keys(this.form.controls).forEach(key =>
+        this.form.get(key)?.markAsTouched()
+      );
+      return;
+    }
+
+    this.isLoading = true;
+    const { name, phone } = this.form.value;
+
+    this.userService.checkPhoneExists(phone).subscribe({
+      next: (res: CheckUserResponse) => {
+        if (res.returning_user) {
+          // ✅ Update returning user
+          this.userService.createUser(name, phone).subscribe({
+            next: (updatedUser: CreateUserResponse) => {
+              this.isLoading = false;
+              this.router.navigate(['spin'], {
+                queryParams: { phone, user_id: updatedUser.id }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error updating user. Please try again.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        } else {
+          // ✅ New user → go to review
+          this.userService.createUser(name, phone).subscribe({
+            next: (newUser: CreateUserResponse) => {
+              this.isLoading = false;
+              this.router.navigate(['review'], {
+                queryParams: { phone, user_id: newUser.id }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error saving user. Please try again.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.snackBar.open('Error verifying phone. Please check connection.', 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+}*/
+
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
+import { UserService, CheckUserResponse, CreateUserResponse, GetUserResponse } from '../../services/user';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+
+@Component({
+  selector: 'app-phone-entry',
+  standalone: true,
+  imports: [
+    CommonModule,
+    ReactiveFormsModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatButtonModule,
+    MatIconModule,
+    MatProgressSpinnerModule,
+    MatSnackBarModule
+  ],
+  templateUrl: './phone-entry.html',
+  styleUrls: ['./phone-entry.css']
+})/*
+export class PhoneEntry implements OnInit {
+  form!: FormGroup;
+  isLoading = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      phone: ['', [Validators.required, Validators.pattern(/^(\+\d{1,3}[- ]?)?\d{10}$/)]]
+    });
+  }
+
+  onSubmit(): void {
+    if (!this.form.valid) {
+      Object.keys(this.form.controls).forEach(key =>
+        this.form.get(key)?.markAsTouched()
+      );
+      return;
+    }
+
+    this.isLoading = true;
+    const { name, phone } = this.form.value;
+
+    this.userService.checkPhoneExists(phone).subscribe({
+      next: (res: CheckUserResponse) => {
+        if (res.returning_user && res.user_id) {
+          // ✅ Returning user → fetch details
+          this.userService.getUser(res.user_id).subscribe({
+            next: (userDetails: GetUserResponse) => {
+              this.saveUser(userDetails);
+              this.isLoading = false;
+              this.router.navigate(['spin'], {
+                queryParams: { phone, user_id: userDetails.data.id }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error fetching user details.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        } else {
+          // ✅ New user → create then fetch details
+          this.userService.createUser(name, phone).subscribe({
+            next: (newUser: CreateUserResponse) => {
+              this.userService.getUser(newUser.id).subscribe({
+                next: (userDetails: GetUserResponse) => {
+                  this.saveUser(userDetails);
+                  this.isLoading = false;
+                  this.router.navigate(['review'], {
+                    queryParams: { phone, user_id: userDetails.data.id }
+                  });
+                },
+                error: () => {
+                  this.isLoading = false;
+                  this.snackBar.open('User created but details could not be fetched.', 'Dismiss', { duration: 5000 });
+                }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error saving user. Please try again.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.snackBar.open('Error verifying phone. Please check connection.', 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  private saveUser(userDetails: GetUserResponse): void {
+    // Save user info locally (you can also use a dedicated AuthService)
+    localStorage.setItem('user', JSON.stringify(userDetails.data));
+  }
+}
+*/
+export class PhoneEntry implements OnInit {
+  form!: FormGroup;
+  isLoading = false;
+
+  constructor(
+    private fb: FormBuilder,
+    private userService: UserService,
+    private router: Router,
+    private snackBar: MatSnackBar
+  ) {}
+
+  ngOnInit(): void {
+    this.form = this.fb.group({
+      name: ['', [Validators.required, Validators.minLength(2)]],
+      phone: ['', [Validators.required, Validators.pattern(/^(\+\d{1,3}[- ]?)?\d{10}$/)]]
+    });
+  }
+
+  onSubmit(): void {
+    if (!this.form.valid) {
+      Object.keys(this.form.controls).forEach(key =>
+        this.form.get(key)?.markAsTouched()
+      );
+      return;
+    }
+
+    this.isLoading = true;
+    const { name, phone } = this.form.value;
+
+    this.userService.checkPhoneExists(phone).subscribe({
+      next: (res: CheckUserResponse) => {
+        if (res.returning_user) {
+          // ✅ Returning user → fetch latest user details
+          this.userService.getLatestUser().subscribe({
+            next: (userDetails: GetUserResponse) => {
+              this.saveUser(userDetails);
+              this.isLoading = false;
+              this.router.navigate(['spin'], {
+                queryParams: { phone, user_id: userDetails.data?.id }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error fetching latest user details.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        } else {
+          // ✅ New user → create then fetch latest user details
+          this.userService.createUser(name, phone).subscribe({
+            next: () => {
+              this.userService.getLatestUser().subscribe({
+                next: (userDetails: GetUserResponse) => {
+                  this.saveUser(userDetails);
+                  this.isLoading = false;
+                  this.router.navigate(['review'], {
+                    queryParams: { phone, user_id: userDetails.data?.id }
+                  });
+                },
+                error: () => {
+                  this.isLoading = false;
+                  this.snackBar.open('User created but latest details could not be fetched.', 'Dismiss', { duration: 5000 });
+                }
+              });
+            },
+            error: () => {
+              this.isLoading = false;
+              this.snackBar.open('Error saving user. Please try again.', 'Dismiss', { duration: 5000 });
+            }
+          });
+        }
+      },
+      error: () => {
+        this.isLoading = false;
+        this.snackBar.open('Error verifying phone. Please check connection.', 'Dismiss', { duration: 5000 });
+      }
+    });
+  }
+
+  private saveUser(userDetails: GetUserResponse): void {
+    // Save user info locally
+    localStorage.setItem('user', JSON.stringify(userDetails.data));
+  }
+}
+

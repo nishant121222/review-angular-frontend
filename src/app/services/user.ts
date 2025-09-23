@@ -1,84 +1,194 @@
 /*import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class User {
-  private apiUrl = 'http://localhost:3000/api/users'; //  Your backend API
-
-  constructor(private http: HttpClient) {}
-
-  //  Check if phone exists → return boolean directly
-  checkPhoneExists(phone: string): Observable<boolean> {
-    return this.http
-      .get<{ exists: boolean }>(`${this.apiUrl}/check-phone/${phone}`)
-      .pipe(map(res => res.exists));
-  }
-
-  //  Send OTP
-  sendOtp(phone: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/send-otp`, { phone });
-  }
-
-  //  Verify OTP → backend should return { valid: true/false }
-  verifyOtp(phone: string, otp: string): Observable<boolean> {
-    return this.http
-      .post<{ valid: boolean }>(`${this.apiUrl}/verify-otp`, { phone, otp })
-      .pipe(map(res => res.valid));
-  }
-}
-*//*
-import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable, map } from 'rxjs';
-
-@Injectable({
-  providedIn: 'root'
-})
-export class User {
-
-private apiUrl = 'http://127.0.0.1:8000/api/users/'; // Django backend usually runs on 8000
-
-  constructor(private http: HttpClient) {}
-
-  // Create new user (name + phone)
-  createUser(name: string, phone: string): Observable<any> {
-    return this.http.post(this.apiUrl, { name, phone });
-  }
-
-  // Check if phone exists
-  checkPhoneExists(phone: string): Observable<boolean> {
-    return this.http
-      .get<{ exists: boolean }>(`${this.apiUrl}check-phone/${phone}/`)
-      .pipe(map(res => res.exists));
-  }
-}*/import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+
+// ✅ Response interfaces
+export interface CheckUserResponse {
+  returning_user: boolean;
+  user_id: number | null;
+}
+
+export interface CreateUserResponse {
+  id: number;
+  phone: string;
+  created: boolean;
+}
+// ✅ Response interface
+export interface GetUserResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    username: string;
+    is_superuser: boolean;
+  };
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
-  private baseUrl = environment.apiUrl;
+  private usersUrl = `${environment.apiUrl}accounts/`;
+  //private baseUrl = environment.apiUrl;        // ✅ Root: http://localhost:8000/
+  //private usersUrl = `${this.baseUrl}accounts/`; // ✅ http://localhost:8000/accounts/
 
-  constructor(private http: HttpClient) {}
+  private authUrl = `${environment.apiUrl}auth/`;
 
-  // Create new user
-  createUser(name: string, phone: string): Observable<{ id: number, phone: string, created: boolean }> {
-    return this.http.post<{ id: number, phone: string, created: boolean }>(
-      `${this.baseUrl}create-user/`,
-      { name, phone, business_id: environment.businessId }   // ✅ include businessId
+  constructor(private http: HttpClient) { }
+
+  // ✅ Check if phone exists
+  checkPhoneExists(phone: string): Observable<CheckUserResponse> {
+    return this.http.get<CheckUserResponse>(`${this.usersUrl}users/?phone=${phone}`);
+  }
+
+  // ✅ Create or update user
+  createUser(
+    name: string,
+    phone: string
+  ): Observable<CreateUserResponse> {
+    return this.http.post<CreateUserResponse>(
+      `${this.usersUrl}users/create/`,
+      { name, phone, business_id: "1" }
     );
   }
 
-  // Check if user exists
-  checkPhoneExists(phone: string): Observable<{ returning_user: boolean, user_id: number | null }> {
-    return this.http.get<{ returning_user: boolean, user_id: number | null }>(
-      `${this.baseUrl}check-user/?phone=${phone}`
+
+}*/
+/*
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+// ✅ Response interfaces
+export interface CheckUserResponse {
+  returning_user: boolean;
+  user_id: number | null;
+}
+
+export interface CreateUserResponse {
+  id: number;
+  phone: string;
+  created: boolean;
+}
+
+export interface GetUserResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    username: string;
+    is_superuser: boolean;
+  };
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private usersUrl = `${environment.apiUrl}accounts/`;
+  private authUrl = `${environment.apiUrl}auth/`;
+
+  constructor(private http: HttpClient) {}
+
+  // ✅ Check if phone exists
+  checkPhoneExists(phone: string): Observable<CheckUserResponse> {
+    return this.http.get<CheckUserResponse>(`${this.usersUrl}users/?phone=${phone}`);
+  }
+
+  // ✅ Create or update user
+  createUser(name: string, phone: string): Observable<CreateUserResponse> {
+    return this.http.post<CreateUserResponse>(
+      `${this.usersUrl}users/create/`,
+      { name, phone, business_id: "1" }
     );
+  }
+
+  // ✅ Get user details by ID
+  getUser(userId: number): Observable<GetUserResponse> {
+    return this.http.get<GetUserResponse>(`${this.usersUrl}users/latest/${userId}/`);
+  }
+}
+
+
+*/
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+// ✅ Response interfaces
+export interface CheckUserResponse {
+  returning_user: boolean;
+  user_id: number | null;
+}
+
+export interface CreateUserResponse {
+  id: number;
+  phone: string;
+  created: boolean;
+}
+
+export interface GetUserResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    username: string;
+    is_superuser: boolean;
+  } | null;
+}
+
+// ✅ New interface for list of users
+export interface ListUsersResponse {
+  status: boolean;
+  message: string;
+  data: {
+    id: number;
+    username: string;
+    is_superuser: boolean;
+  }[];
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class UserService {
+  private usersUrl = `${environment.apiUrl}accounts/`;
+  private authUrl = `${environment.apiUrl}auth/`;
+
+  constructor(private http: HttpClient) {}
+
+  // ----------------------------
+  // ✅ Check if phone exists
+  // ----------------------------
+  checkPhoneExists(phone: string): Observable<CheckUserResponse> {
+    return this.http.get<CheckUserResponse>(`${this.usersUrl}users/?phone=${phone}`);
+  }
+
+  // ----------------------------
+  // ✅ Create or update user
+  // ----------------------------
+  createUser(name: string, phone: string): Observable<CreateUserResponse> {
+    return this.http.post<CreateUserResponse>(`${this.usersUrl}users/create/`, {
+      name,
+      phone,
+      business_id: "1"
+    });
+  }
+
+  // ----------------------------
+  // ✅ Get latest user
+  // ----------------------------
+  getLatestUser(): Observable<GetUserResponse> {
+    return this.http.get<GetUserResponse>(`${this.usersUrl}users/latest/`);
+  }
+
+  // ----------------------------
+  // ✅ Get all users
+  // ----------------------------
+  getAllUsers(): Observable<ListUsersResponse> {
+    return this.http.get<ListUsersResponse>(`${this.usersUrl}users/`);
   }
 }

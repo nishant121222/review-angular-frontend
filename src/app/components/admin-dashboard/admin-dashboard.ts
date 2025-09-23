@@ -1,4 +1,5 @@
-
+// It is current component file , 20-09-2025
+/*
 import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatCardModule } from '@angular/material/card';
@@ -707,6 +708,8 @@ export class AdminDashboard implements OnInit, AfterViewInit {
     }, 1500);
   }
 }
+*/
+
 
 // This is Perfect Code with Dummy Data Layout
 
@@ -3184,3 +3187,1474 @@ export class AdminDashboard implements OnInit, AfterViewInit {
   }
 }
 */
+/*
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { Pipe, PipeTransform } from '@angular/core';
+
+// chart.js + ng2-charts
+import { ChartConfiguration } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+
+// ✅ Import AdminService
+import { AdminService } from '../../services/admin';
+
+export interface Review {
+  id: number;   // ✅ added for backend approve/reject
+  phone: string;
+  rating: number;
+  comment: string;
+  status: string;
+}
+
+export interface GameOutcome {
+  phone: string;
+  prize: string;
+  date: string;
+}
+
+@Pipe({
+  name: 'truncate',
+  standalone: true
+})
+export class TruncatePipe implements PipeTransform {
+  transform(value: string, limit: number = 50, completeWords: boolean = false, ellipsis: string = '...'): string {
+    if (!value) return '';
+    if (value.length <= limit) return value;
+    if (completeWords) limit = value.substr(0, limit).lastIndexOf(' ');
+    return `${value.substr(0, limit)}${ellipsis}`;
+  }
+}
+
+@Component({
+  selector: 'app-admin-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatTableModule,
+    MatButtonModule,
+    MatToolbarModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatChipsModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatPaginatorModule,
+    MatSortModule,
+    TruncatePipe,
+    BaseChartDirective
+  ],
+  template: `
+  <div class="dashboard-container">
+    <!-- Header -->
+    <mat-toolbar class="toolbar">
+      <div class="toolbar-left">
+        <mat-icon class="brand-icon">dashboard</mat-icon>
+        <span class="brand-title">Admin Dashboard</span>
+      </div>
+      <div class="toolbar-right">
+        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Account Menu">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>
+            <mat-icon>settings</mat-icon>
+            <span>Settings</span>
+          </button>
+          <button mat-menu-item>
+            <mat-icon>exit_to_app</mat-icon>
+            <span>Logout</span>
+          </button>
+        </mat-menu>
+      </div>
+    </mat-toolbar>
+
+    <!-- Content Area -->
+    <div class="dashboard-content">
+
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon pending">
+                <mat-icon>rate_review</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{pendingReviewsData.data.length}}</h3>
+                <p>Pending Reviews</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon outcomes">
+                <mat-icon>casino</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{gameOutcomesData.data.length}}</h3>
+                <p>Total Games</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon prizes">
+                <mat-icon>card_giftcard</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{getPrizeCount()}}</h3>
+                <p>Prizes Awarded</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon rating">
+                <mat-icon>star</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{getAverageRating()}}</h3>
+                <p>Avg. Rating</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Top Analytics Section -->
+      <div class="analytics-grid">
+        <mat-card class="analytics-card">
+          <mat-card-header>
+            <mat-card-title>Ratings Distribution</mat-card-title>
+            <button mat-icon-button matTooltip="Distribution of customer ratings">
+              <mat-icon>info</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas baseChart
+                [data]="ratingsChartData"
+                [options]="barChartOptions"
+                [type]="'bar'">
+              </canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="analytics-card">
+          <mat-card-header>
+            <mat-card-title>Prize Distribution</mat-card-title>
+            <button mat-icon-button matTooltip="Breakdown of prizes awarded">
+              <mat-icon>info</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas baseChart
+                [data]="prizeChartData"
+                [options]="pieChartOptions"
+                [type]="'pie'">
+              </canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Tables Section -->
+      <div class="tables-grid">
+        <mat-card class="table-card">
+          <mat-card-header>
+            <mat-card-title>Pending Reviews</mat-card-title>
+            <span class="spacer"></span>
+            <button mat-icon-button (click)="refreshReviews()" matTooltip="Refresh reviews">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="table-container">
+              <table mat-table [dataSource]="pendingReviewsData" class="mat-elevation-z1 full-table" matSort>
+
+                <ng-container matColumnDef="phone">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Phone </th>
+                  <td mat-cell *matCellDef="let review"> {{review.phone}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="rating">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Rating </th>
+                  <td mat-cell *matCellDef="let review"> 
+                    <div class="rating-stars">
+                      <mat-icon *ngFor="let star of getStars(review.rating)">{{star}}</mat-icon>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="comment">
+                  <th mat-header-cell *matHeaderCellDef> Comment </th>
+                  <td mat-cell *matCellDef="let review"> 
+                    <span [matTooltip]="review.comment">{{review.comment | truncate:30}}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef> Actions </th>
+                  <td mat-cell *matCellDef="let review">
+                    <button mat-icon-button color="primary" (click)="approveReview(review)" matTooltip="Approve review">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="rejectReview(review)" matTooltip="Reject review">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                    <button mat-icon-button color="accent" (click)="viewDetails(review)" matTooltip="View details">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="reviewColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: reviewColumns;"></tr>
+              </table>
+            </div>
+            <mat-paginator #reviewsPaginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+            
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="table-card">
+          <mat-card-header>
+            <mat-card-title>Game Outcomes</mat-card-title>
+            <span class="spacer"></span>
+            <button mat-icon-button (click)="refreshOutcomes()" matTooltip="Refresh outcomes">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="table-container">
+              <table mat-table [dataSource]="gameOutcomesData" class="mat-elevation-z1 full-table" matSort>
+
+                <ng-container matColumnDef="phone">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Phone </th>
+                  <td mat-cell *matCellDef="let outcome"> {{outcome.phone}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="prize">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Prize </th>
+                  <td mat-cell *matCellDef="let outcome">
+                    <mat-chip [style.backgroundColor]="getPrizeColor(outcome.prize)" selected class="prize-chip">
+                      <mat-icon class="chip-icon">{{getPrizeIcon(outcome.prize)}}</mat-icon>
+                      {{outcome.prize}}
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Date </th>
+                  <td mat-cell *matCellDef="let outcome"> {{outcome.date | date:'mediumDate'}} </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="gameColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: gameColumns;"></tr>
+              </table>
+            </div>
+            <!-- Game Outcomes Table -->
+<mat-paginator #outcomesPaginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons>
+</mat-paginator>
+  </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Export Button -->
+      <div class="export-section">
+        <button mat-raised-button color="accent" (click)="exportData()" class="export-btn">
+          <mat-icon>file_download</mat-icon>
+          Export Data
+        </button>
+      </div>
+    </div>
+  </div>
+  `,
+  styles: [`
+    .dashboard-container { 
+      display: flex; 
+      flex-direction: column; 
+      height: 100vh; 
+      background: #f5f7fa; 
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .toolbar { 
+      display: flex; 
+      justify-content: space-between; 
+      background: linear-gradient(135deg, #3f51b5 0%, #303f9f 100%); 
+      color: #fff; 
+      padding: 0 24px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .toolbar-left { 
+      display: flex; 
+      align-items: center; 
+    }
+    
+    .brand-icon { 
+      margin-right: 12px; 
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+    
+    .brand-title { 
+      font-size: 20px; 
+      font-weight: 500; 
+      letter-spacing: 0.5px;
+    }
+    
+    .toolbar-right { 
+      display: flex; 
+      align-items: center; 
+    }
+    
+    .dashboard-content { 
+      flex: 1; 
+      overflow-y: auto; 
+      padding: 24px; 
+      max-width: 1800px; 
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .stats-grid { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 24px; 
+      margin-bottom: 30px; 
+    }
+    
+    .stat-card { 
+      border-radius: 12px; 
+      text-align: center; 
+      padding: 16px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    
+    .stat-content { 
+      display: flex; 
+      align-items: center; 
+      justify-content: flex-start; 
+      gap: 16px; 
+    }
+    
+    .stat-icon { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border-radius: 12px; 
+      width: 60px; 
+      height: 60px; 
+      color: #fff;
+      font-size: 28px;
+    }
+    
+    .stat-icon.pending { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+    .stat-icon.outcomes { background: linear-gradient(135deg, #3f51b5 0%, #303f9f 100%); }
+    .stat-icon.prizes { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+    .stat-icon.rating { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+    
+    .stat-info h3 { 
+      margin: 0; 
+      font-size: 28px; 
+      font-weight: 700; 
+      text-align: left;
+    }
+    
+    .stat-info p { 
+      margin: 4px 0 0; 
+      font-size: 14px; 
+      color: #666; 
+      text-align: left;
+    }
+    
+    .analytics-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 24px; 
+      margin-bottom: 30px; 
+    }
+    
+    .analytics-card {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .analytics-card mat-card-header {
+      padding: 16px 16px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .analytics-card mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .chart-container {
+      height: 300px;
+      padding: 16px;
+      position: relative;
+    }
+    
+    .tables-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 24px; 
+      margin-bottom: 30px; 
+    }
+    
+    .table-card {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .table-card mat-card-header {
+      padding: 16px 16px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .table-card mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .spacer {
+      flex: 1 1 auto;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+    }
+    
+    .full-table {
+      width: 100%;
+    }
+    
+    .rating-stars {
+      display: flex;
+      color: #ffc107;
+    }
+    
+    .prize-chip {
+      display: flex;
+      align-items: center;
+      color: white;
+      font-weight: 500;
+      padding: 4px 12px;
+    }
+    
+    .chip-icon {
+      margin-right: 6px;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .export-section { 
+      text-align: right; 
+      padding: 16px 0;
+    }
+    
+    .export-btn { 
+      border-radius: 8px; 
+      font-weight: 500;
+      padding: 8px 24px;
+      font-size: 16px;
+    }
+    
+    
+    @media (max-width: 1400px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .analytics-grid,
+      .tables-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .dashboard-content {
+        padding: 16px;
+      }
+    }
+  `]})
+export class AdminDashboard implements OnInit, AfterViewInit {
+  // ✅ Use MatTableDataSource
+  pendingReviewsData = new MatTableDataSource<Review>();
+  gameOutcomesData = new MatTableDataSource<GameOutcome>();
+
+  reviewColumns: string[] = ['phone', 'rating', 'comment', 'actions'];
+  gameColumns: string[] = ['phone', 'prize', 'date'];
+
+  @ViewChild('reviewsPaginator') reviewsPaginator!: MatPaginator;
+  @ViewChild('outcomesPaginator') outcomesPaginator!: MatPaginator;
+
+  ratingsChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: ['1★', '2★', '3★', '4★', '5★'],
+    datasets: [{
+      label: 'Number of Ratings',
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: ['#f44336', '#ff9800', '#ffeb3b', '#8bc34a', '#4caf50'],
+      borderColor: ['#d32f2f', '#f57c00', '#fbc02d', '#689f38', '#388e3c'],
+      borderWidth: 1
+    }]
+  };
+
+  prizeChartData: ChartConfiguration<'pie'>['data'] = {
+    labels: ['Free Coffee', 'Discount Coupon', 'Gift Card', 'Free Dessert', 'No Prize'],
+    datasets: [{
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: ['#6d4c41', '#ff5722', '#9c27b0', '#e91e63', '#9e9e9e'],
+      borderColor: '#fff',
+      borderWidth: 2,
+      hoverOffset: 8
+    }]
+  };
+
+  barChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  };
+
+  pieChartOptions: ChartConfiguration<'pie'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } }
+  };
+
+  constructor(
+    private snackBar: MatSnackBar,
+    private adminService: AdminService   // ✅ inject service
+  ) {}
+
+  ngOnInit() {
+    this.refreshReviews();
+    this.refreshOutcomes();
+  }
+
+  ngAfterViewInit() {
+    this.pendingReviewsData.paginator = this.reviewsPaginator;
+    this.gameOutcomesData.paginator = this.outcomesPaginator;
+  }
+
+  // ✅ Load pending reviews from backend
+  refreshReviews() {
+    this.adminService.getPendingReviews().subscribe({
+      next: (res) => {
+        this.pendingReviewsData.data = res.reviews;
+        this.updateCharts();
+      },
+      error: () => this.snackBar.open('Failed to load reviews', 'Close', { duration: 3000 })
+    });
+  }
+
+  // ✅ Load game outcomes from backend
+  refreshOutcomes() {
+    this.adminService.getGameResults().subscribe({
+      next: (data) => {
+        this.gameOutcomesData.data = data;
+        this.updateCharts();
+      },
+      error: () => this.snackBar.open('Failed to load outcomes', 'Close', { duration: 3000 })
+    });
+  }
+
+  approveReview(review: Review) {
+    this.adminService.approveReview(review.id).subscribe({
+      next: () => {
+        this.pendingReviewsData.data = this.pendingReviewsData.data.filter(r => r.id !== review.id);
+        this.updateCharts();
+        this.snackBar.open('Review approved successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to approve review', 'Close', { duration: 3000 })
+    });
+  }
+
+  rejectReview(review: Review) {
+    this.adminService.rejectReview(review.id).subscribe({
+      next: () => {
+        this.pendingReviewsData.data = this.pendingReviewsData.data.filter(r => r.id !== review.id);
+        this.updateCharts();
+        this.snackBar.open('Review rejected', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to reject review', 'Close', { duration: 3000 })
+    });
+  }
+
+  exportData() {
+    this.adminService.exportData().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'export.csv';
+        a.click();
+        this.snackBar.open('Data exported successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to export data', 'Close', { duration: 3000 })
+    });
+  }
+
+  // ✅ Helpers (same as before)
+  updateCharts() {
+    const ratingCounts = [0, 0, 0, 0, 0];
+    this.pendingReviewsData.data.forEach(r => ratingCounts[r.rating - 1]++);
+    this.ratingsChartData.datasets[0].data = ratingCounts;
+
+    const prizeCounts: { [key: string]: number } = {
+      'Free Coffee': 0, 'Discount Coupon': 0, 'Gift Card': 0, 'Free Dessert': 0, 'No Prize': 0
+    };
+    this.gameOutcomesData.data.forEach(o => prizeCounts[o.prize]++);
+    this.prizeChartData.datasets[0].data = Object.values(prizeCounts);
+  }
+
+  getPrizeCount(): number {
+    return this.gameOutcomesData.data.filter(o => o.prize !== 'No Prize').length;
+  }
+
+  getAverageRating(): string {
+    if (this.pendingReviewsData.data.length === 0) return '0.0';
+    const total = this.pendingReviewsData.data.reduce((sum, r) => sum + r.rating, 0);
+    return (total / this.pendingReviewsData.data.length).toFixed(1);
+  }
+
+  getStars(rating: number): string[] {
+    return Array.from({ length: 5 }, (_, i) => (i < rating ? 'star' : 'star_border'));
+  }
+
+  getPrizeColor(prize: string): string {
+    const colors: any = {
+      'Free Coffee': '#6d4c41',
+      'Discount Coupon': '#ff5722',
+      'Gift Card': '#9c27b0',
+      'Free Dessert': '#e91e63',
+      'No Prize': '#9e9e9e'
+    };
+    return colors[prize] || '#3f51b5';
+  }
+
+  getPrizeIcon(prize: string): string {
+    const icons: any = {
+      'Free Coffee': 'local_cafe',
+      'Discount Coupon': 'confirmation_number',
+      'Gift Card': 'card_giftcard',
+      'Free Dessert': 'cake',
+      'No Prize': 'block'
+    };
+    return icons[prize] || 'card_giftcard';
+  }
+
+  viewDetails(review: Review) {
+    alert(`Review Details:\nPhone: ${review.phone}\nRating: ${review.rating}\nComment: ${review.comment}`);
+  }
+}
+
+*/
+
+import { Component, OnInit, ViewChild, AfterViewInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { MatCardModule } from '@angular/material/card';
+import { MatTableModule, MatTableDataSource } from '@angular/material/table';
+import { MatButtonModule } from '@angular/material/button';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatPaginator, MatPaginatorModule } from '@angular/material/paginator';
+import { MatSortModule } from '@angular/material/sort';
+import { Pipe, PipeTransform } from '@angular/core';
+
+// chart.js + ng2-charts
+import { ChartConfiguration } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+
+// ✅ Import AdminService
+import { AdminService } from '../../services/admin';
+
+export interface Review {
+  id: number;   // ✅ added for backend approve/reject
+  phone: string;
+  rating: number;
+  comment: string;
+  status: string;
+}
+
+export interface GameOutcome {
+  phone: string;
+  prize: string;
+  date: string;
+}
+
+@Pipe({
+  name: 'truncate',
+  standalone: true
+})
+export class TruncatePipe implements PipeTransform {
+  transform(value: string, limit: number = 50, completeWords: boolean = false, ellipsis: string = '...'): string {
+    if (!value) return '';
+    if (value.length <= limit) return value;
+    if (completeWords) limit = value.substr(0, limit).lastIndexOf(' ');
+    return `${value.substr(0, limit)}${ellipsis}`;
+  }
+}
+
+@Component({
+  selector: 'app-admin-dashboard',
+  standalone: true,
+  imports: [
+    CommonModule,
+    MatCardModule,
+    MatTableModule,
+    MatButtonModule,
+    MatToolbarModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatChipsModule,
+    MatMenuModule,
+    MatTooltipModule,
+    MatPaginatorModule,
+    MatSortModule,
+    TruncatePipe,
+    BaseChartDirective
+  ],
+  template: `
+  <div class="dashboard-container">
+    <!-- Header -->
+    <mat-toolbar class="toolbar">
+      <div class="toolbar-left">
+        <mat-icon class="brand-icon">dashboard</mat-icon>
+        <span class="brand-title">Admin Dashboard</span>
+      </div>
+      <div class="toolbar-right">
+        <button mat-icon-button [matMenuTriggerFor]="menu" matTooltip="Account Menu">
+          <mat-icon>account_circle</mat-icon>
+        </button>
+        <mat-menu #menu="matMenu">
+          <button mat-menu-item>
+            <mat-icon>settings</mat-icon>
+            <span>Settings</span>
+          </button>
+          <button mat-menu-item>
+            <mat-icon>exit_to_app</mat-icon>
+            <span>Logout</span>
+          </button>
+        </mat-menu>
+      </div>
+    </mat-toolbar>
+
+    <!-- Content Area -->
+    <div class="dashboard-content">
+
+      <!-- Quick Stats -->
+      <div class="stats-grid">
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon pending">
+                <mat-icon>rate_review</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{pendingReviewsData.data.length}}</h3>
+                <p>Pending Reviews</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon outcomes">
+                <mat-icon>casino</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{gameOutcomesData.data.length}}</h3>
+                <p>Total Games</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon prizes">
+                <mat-icon>card_giftcard</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{getPrizeCount()}}</h3>
+                <p>Prizes Awarded</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+          <mat-card-content>
+            <div class="stat-content">
+              <div class="stat-icon rating">
+                <mat-icon>star</mat-icon>
+              </div>
+              <div class="stat-info">
+                <h3>{{getAverageRating()}}</h3>
+                <p>Avg. Rating</p>
+              </div>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Top Analytics Section -->
+      <div class="analytics-grid">
+        <mat-card class="analytics-card">
+          <mat-card-header>
+            <mat-card-title>Ratings Distribution</mat-card-title>
+            <button mat-icon-button matTooltip="Distribution of customer ratings">
+              <mat-icon>info</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas baseChart
+                [data]="ratingsChartData"
+                [options]="barChartOptions"
+                [type]="'bar'">
+              </canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="analytics-card">
+          <mat-card-header>
+            <mat-card-title>Prize Distribution</mat-card-title>
+            <button mat-icon-button matTooltip="Breakdown of prizes awarded">
+              <mat-icon>info</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="chart-container">
+              <canvas baseChart
+                [data]="prizeChartData"
+                [options]="pieChartOptions"
+                [type]="'pie'">
+              </canvas>
+            </div>
+          </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Tables Section -->
+      <div class="tables-grid">
+        <mat-card class="table-card">
+          <mat-card-header>
+            <mat-card-title>Pending Reviews</mat-card-title>
+            <span class="spacer"></span>
+            <button mat-icon-button (click)="refreshReviews()" matTooltip="Refresh reviews">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="table-container">
+              <table mat-table [dataSource]="pendingReviewsData" class="mat-elevation-z1 full-table" matSort>
+
+                <ng-container matColumnDef="phone">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Phone </th>
+                  <td mat-cell *matCellDef="let review"> {{review.phone}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="rating">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Rating </th>
+                  <td mat-cell *matCellDef="let review"> 
+                    <div class="rating-stars">
+                      <mat-icon *ngFor="let star of getStars(review.rating)">{{star}}</mat-icon>
+                    </div>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="comment">
+                  <th mat-header-cell *matHeaderCellDef> Comment </th>
+                  <td mat-cell *matCellDef="let review"> 
+                    <span [matTooltip]="review.comment">{{review.comment | truncate:30}}</span>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="actions">
+                  <th mat-header-cell *matHeaderCellDef> Actions </th>
+                  <td mat-cell *matCellDef="let review">
+                    <button mat-icon-button color="primary" (click)="approveReview(review)" matTooltip="Approve review">
+                      <mat-icon>check_circle</mat-icon>
+                    </button>
+                    <button mat-icon-button color="warn" (click)="rejectReview(review)" matTooltip="Reject review">
+                      <mat-icon>cancel</mat-icon>
+                    </button>
+                    <button mat-icon-button color="accent" (click)="viewDetails(review)" matTooltip="View details">
+                      <mat-icon>visibility</mat-icon>
+                    </button>
+                  </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="reviewColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: reviewColumns;"></tr>
+              </table>
+            </div>
+            <mat-paginator #reviewsPaginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons></mat-paginator>
+            
+
+          </mat-card-content>
+        </mat-card>
+
+        <mat-card class="table-card">
+          <mat-card-header>
+            <mat-card-title>Game Outcomes</mat-card-title>
+            <span class="spacer"></span>
+            <button mat-icon-button (click)="refreshOutcomes()" matTooltip="Refresh outcomes">
+              <mat-icon>refresh</mat-icon>
+            </button>
+          </mat-card-header>
+          <mat-card-content>
+            <div class="table-container">
+              <table mat-table [dataSource]="gameOutcomesData" class="mat-elevation-z1 full-table" matSort>
+
+                <ng-container matColumnDef="phone">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Phone </th>
+                  <td mat-cell *matCellDef="let outcome"> {{outcome.phone}} </td>
+                </ng-container>
+
+                <ng-container matColumnDef="prize">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Prize </th>
+                  <td mat-cell *matCellDef="let outcome">
+                    <mat-chip [style.backgroundColor]="getPrizeColor(outcome.prize)" selected class="prize-chip">
+                      <mat-icon class="chip-icon">{{getPrizeIcon(outcome.prize)}}</mat-icon>
+                      {{outcome.prize}}
+                    </mat-chip>
+                  </td>
+                </ng-container>
+
+                <ng-container matColumnDef="date">
+                  <th mat-header-cell *matHeaderCellDef mat-sort-header> Date </th>
+                  <td mat-cell *matCellDef="let outcome"> {{outcome.date | date:'mediumDate'}} </td>
+                </ng-container>
+
+                <tr mat-header-row *matHeaderRowDef="gameColumns"></tr>
+                <tr mat-row *matRowDef="let row; columns: gameColumns;"></tr>
+              </table>
+            </div>
+            <!-- Game Outcomes Table -->
+<mat-paginator #outcomesPaginator [pageSize]="5" [pageSizeOptions]="[5, 10, 20]" showFirstLastButtons>
+</mat-paginator>
+  </mat-card-content>
+        </mat-card>
+      </div>
+
+      <!-- Export Button -->
+      <div class="export-section">
+        <button mat-raised-button color="accent" (click)="exportData()" class="export-btn">
+          <mat-icon>file_download</mat-icon>
+          Export Data
+        </button>
+      </div>
+    </div>
+  </div>
+  `,
+  styles: [`
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    .dashboard-container { 
+      display: flex; 
+      flex-direction: column; 
+      min-height: 100vh;   /* ✅ updated */
+      background: #f5f7fa; 
+      font-family: 'Roboto', sans-serif;
+    }
+    
+    .toolbar { 
+      display: flex; 
+      justify-content: space-between; 
+      background: linear-gradient(135deg, #3f51b5 0%, #303f9f 100%); 
+      color: #fff; 
+      padding: 0 24px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .dashboard-content { 
+      flex: 1;              /* ✅ grow to fill remaining space */
+      overflow-y: auto;     /* ✅ scroll if content is long */
+      padding: 24px; 
+      max-width: 1800px; 
+      margin: 0 auto;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    
+    .toolbar-left { 
+      display: flex; 
+      align-items: center; 
+    }
+    
+    .brand-icon { 
+      margin-right: 12px; 
+      font-size: 28px;
+      width: 28px;
+      height: 28px;
+    }
+    
+    .brand-title { 
+      font-size: 20px; 
+      font-weight: 500; 
+      letter-spacing: 0.5px;
+    }
+    
+    .toolbar-right { 
+      display: flex; 
+      align-items: center; 
+    }
+    
+    
+    .stats-grid { 
+      display: grid; 
+      grid-template-columns: repeat(4, 1fr); 
+      gap: 24px; 
+      margin-bottom: 30px; 
+    }
+    
+    .stat-card { 
+      border-radius: 12px; 
+      text-align: center; 
+      padding: 16px;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+    }
+    
+    .stat-content { 
+      display: flex; 
+      align-items: center; 
+      justify-content: flex-start; 
+      gap: 16px; 
+    }
+    
+    .stat-icon { 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      border-radius: 12px; 
+      width: 60px; 
+      height: 60px; 
+      color: #fff;
+      font-size: 28px;
+    }
+    
+    .stat-icon.pending { background: linear-gradient(135deg, #ff9800 0%, #f57c00 100%); }
+    .stat-icon.outcomes { background: linear-gradient(135deg, #3f51b5 0%, #303f9f 100%); }
+    .stat-icon.prizes { background: linear-gradient(135deg, #4caf50 0%, #388e3c 100%); }
+    .stat-icon.rating { background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); }
+    
+    .stat-info h3 { 
+      margin: 0; 
+      font-size: 28px; 
+      font-weight: 700; 
+      text-align: left;
+    }
+    
+    .stat-info p { 
+      margin: 4px 0 0; 
+      font-size: 14px; 
+      color: #666; 
+      text-align: left;
+    }
+    
+    .analytics-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 24px; 
+      margin-bottom: 30px; 
+    }
+    
+    .analytics-card {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .analytics-card mat-card-header {
+      padding: 16px 16px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .analytics-card mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .chart-container {
+      height: 300px;
+      padding: 16px;
+      position: relative;
+    }
+    
+    .tables-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 24px; 
+      margin-bottom: 30px; 
+    }
+    
+    .table-card {
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    .table-card mat-card-header {
+      padding: 16px 16px 0;
+      display: flex;
+      align-items: center;
+    }
+    
+    .table-card mat-card-title {
+      font-size: 18px;
+      font-weight: 500;
+    }
+    
+    .spacer {
+      flex: 1 1 auto;
+    }
+    
+    .table-container {
+      overflow-x: auto;
+      max-height: 400px;
+    }
+    
+    .full-table {
+      width: 100%;
+    }
+    
+    .rating-stars {
+      display: flex;
+      color: #ffc107;
+    }
+    
+    .prize-chip {
+      display: flex;
+      align-items: center;
+      color: white;
+      font-weight: 500;
+      padding: 4px 12px;
+    }
+    
+    .chip-icon {
+      margin-right: 6px;
+      font-size: 16px;
+      width: 16px;
+      height: 16px;
+    }
+    
+    .export-section { 
+      text-align: right; 
+      padding: 16px 0;
+    }
+    
+    .export-btn { 
+      border-radius: 8px; 
+      font-weight: 500;
+      padding: 8px 24px;
+      font-size: 16px;
+    }
+    
+    
+    @media (max-width: 1400px) {
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      
+      .analytics-grid,
+      .tables-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .dashboard-content {
+        padding: 16px;
+      }
+    }
+  `]})export class AdminDashboard implements OnInit, AfterViewInit {
+  // ✅ Use MatTableDataSource
+  pendingReviewsData = new MatTableDataSource<Review>();
+  gameOutcomesData = new MatTableDataSource<GameOutcome>();
+
+  reviewColumns: string[] = ['phone', 'rating', 'comment', 'actions'];
+  gameColumns: string[] = ['phone', 'prize', 'date'];
+
+  @ViewChild('reviewsPaginator') reviewsPaginator!: MatPaginator;
+  @ViewChild('outcomesPaginator') outcomesPaginator!: MatPaginator;
+
+  ratingsChartData: ChartConfiguration<'bar'>['data'] = {
+    labels: ['1★', '2★', '3★', '4★', '5★'],
+    datasets: [{
+      label: 'Number of Ratings',
+      data: [0, 0, 0, 0, 0],
+      backgroundColor: ['#f44336', '#ff9800', '#ffeb3b', '#8bc34a', '#4caf50'],
+      borderColor: ['#d32f2f', '#f57c00', '#fbc02d', '#689f38', '#388e3c'],
+      borderWidth: 1
+    }]
+  };
+
+  // ✅ Updated Prize Distribution Labels
+  prizeChartData: ChartConfiguration<'pie'>['data'] = {
+    labels: [
+      'Free 30min Pedicure with Facial',
+      'BOGO: Hair Spa | Mani | Pedi',
+      'Haircut/Color/Style – ₹1999',
+      'Global Hair – ₹3999',
+      'Highlights – ₹3999',
+      'Men\'s Cut – ₹399',
+      'Waxing – 25% OFF'
+    ],
+    datasets: [{
+      data: [0, 0, 0, 0, 0, 0, 0],
+      backgroundColor: [
+        '#ff9800', // Pedicure
+        '#9c27b0', // BOGO
+        '#4caf50', // Haircut
+        '#2196f3', // Global Hair
+        '#e91e63', // Highlights
+        '#795548', // Men’s Cut
+        '#607d8b'  // Waxing
+      ],
+      borderColor: '#fff',
+      borderWidth: 2,
+      hoverOffset: 8
+    }]
+  };
+
+  barChartOptions: ChartConfiguration<'bar'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+  };
+
+  pieChartOptions: ChartConfiguration<'pie'>['options'] = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } }
+  };
+
+  constructor(
+    private snackBar: MatSnackBar,
+    private adminService: AdminService
+  ) {}
+
+  ngOnInit() {
+    this.refreshReviews();
+    this.refreshOutcomes();
+  }
+
+  ngAfterViewInit() {
+    this.pendingReviewsData.paginator = this.reviewsPaginator;
+    this.gameOutcomesData.paginator = this.outcomesPaginator;
+  }
+
+  // ✅ Load pending reviews from backend
+  refreshReviews() {
+    this.adminService.getPendingReviews().subscribe({
+      next: (res) => {
+        this.pendingReviewsData.data = res.reviews;
+        this.updateCharts();
+      },
+      error: () => this.snackBar.open('Failed to load reviews', 'Close', { duration: 3000 })
+    });
+  }
+
+  // ✅ Load game outcomes from backend
+  refreshOutcomes() {
+    this.adminService.getGameResults().subscribe({
+      next: (data) => {
+        this.gameOutcomesData.data = data;
+        this.updateCharts();
+      },
+      error: () => this.snackBar.open('Failed to load outcomes', 'Close', { duration: 3000 })
+    });
+  }
+
+  approveReview(review: Review) {
+    this.adminService.approveReview(review.id).subscribe({
+      next: () => {
+        this.pendingReviewsData.data = this.pendingReviewsData.data.filter(r => r.id !== review.id);
+        this.updateCharts();
+        this.snackBar.open('Review approved successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to approve review', 'Close', { duration: 3000 })
+    });
+  }
+
+  rejectReview(review: Review) {
+    this.adminService.rejectReview(review.id).subscribe({
+      next: () => {
+        this.pendingReviewsData.data = this.pendingReviewsData.data.filter(r => r.id !== review.id);
+        this.updateCharts();
+        this.snackBar.open('Review rejected', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to reject review', 'Close', { duration: 3000 })
+    });
+  }
+
+  exportData() {
+    this.adminService.exportData().subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'export.csv';
+        a.click();
+        this.snackBar.open('Data exported successfully', 'Close', { duration: 3000 });
+      },
+      error: () => this.snackBar.open('Failed to export data', 'Close', { duration: 3000 })
+    });
+  }
+
+  // ✅ Helpers
+  updateCharts() {
+    // Ratings distribution
+    const ratingCounts = [0, 0, 0, 0, 0];
+    this.pendingReviewsData.data.forEach(r => ratingCounts[r.rating - 1]++);
+    this.ratingsChartData.datasets[0].data = ratingCounts;
+
+    // Prize distribution
+    const prizeCounts: { [key: string]: number } = {
+      'Free 30min Pedicure with Facial': 0,
+      'BOGO: Hair Spa | Mani | Pedi': 0,
+      'Haircut/Color/Style – ₹1999': 0,
+      'Global Hair – ₹3999': 0,
+      'Highlights – ₹3999': 0,
+      'Men\'s Cut – ₹399': 0,
+      'Waxing – 25% OFF': 0
+    };
+    this.gameOutcomesData.data.forEach(o => {
+      if (prizeCounts[o.prize] !== undefined) prizeCounts[o.prize]++;
+    });
+    this.prizeChartData.datasets[0].data = Object.values(prizeCounts);
+  }
+
+  getPrizeCount(): number {
+    return this.gameOutcomesData.data.length;
+  }
+
+  getAverageRating(): string {
+    if (this.pendingReviewsData.data.length === 0) return '0.0';
+    const total = this.pendingReviewsData.data.reduce((sum, r) => sum + r.rating, 0);
+    return (total / this.pendingReviewsData.data.length).toFixed(1);
+  }
+
+  getStars(rating: number): string[] {
+    return Array.from({ length: 5 }, (_, i) => (i < rating ? 'star' : 'star_border'));
+  }
+
+  getPrizeColor(prize: string): string {
+    const colors: any = {
+      'Free 30min Pedicure with Facial': '#ff9800',
+      'BOGO: Hair Spa | Mani | Pedi': '#9c27b0',
+      'Haircut/Color/Style – ₹1999': '#4caf50',
+      'Global Hair – ₹2196f3':'#2196f3',
+      'Highlights – ₹e91e63':'#e91e63',
+      'Men\'s Cut – ₹795548': '#795548',
+      'Waxing – 25% OFF': '#607d8b'
+    };
+    return colors[prize] || '#3f51b5';
+  }
+
+  getPrizeIcon(prize: string): string {
+    const icons: any = {
+      'Free 30min Pedicure with Facial': 'spa',
+      'BOGO: Hair Spa | Mani | Pedi': 'content_cut',
+      'Haircut/Color/Style – ₹1999': 'face',
+      'Global Hair – ₹3999': 'brush',
+      'Highlights – ₹3999': 'color_lens',
+      'Men\'s Cut – ₹399': 'man',
+      'Waxing – 25% OFF': 'bolt'
+    };
+    return icons[prize] || 'card_giftcard';
+  }
+
+  viewDetails(review: Review) {
+    alert(`Review Details:\nPhone: ${review.phone}\nRating: ${review.rating}\nComment: ${review.comment}`);
+  }
+}

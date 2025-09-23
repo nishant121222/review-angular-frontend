@@ -159,6 +159,7 @@ export class AdminService {
   }
 }*/
 
+/*
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -203,3 +204,50 @@ export class AdminService {
   }
 }
 
+*/
+
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { Review, GameOutcome } from '../components/admin-dashboard/admin-dashboard';
+import { environment } from '../../environments/environment';
+@Injectable({
+  providedIn: 'root'
+})
+export class AdminService {
+  // ✅ Django backend API root
+  private apiUrl = `${environment.apiUrl}`;
+
+  constructor(private http: HttpClient) {}
+
+  // Login
+  login(username: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/login/`, { username, password });
+  }
+
+  // ✅ Fetch all pending reviews
+  // Django returns: { reviews: [...] }
+  getPendingReviews(): Observable<{ reviews: Review[] }> {
+    return this.http.get<{ reviews: Review[] }>(`${this.apiUrl}/reviews/pending/`);
+  }
+
+  // ✅ Approve a review (backend expects review_id in URL, not phone)
+  approveReview(reviewId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reviews/${reviewId}/approve/`, {});
+  }
+
+  // ✅ Reject a review (backend expects review_id in URL, not phone)
+  rejectReview(reviewId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/reviews/${reviewId}/reject/`, {});
+  }
+
+  // ✅ Fetch game outcomes (only works if you have this endpoint in Django)
+  getGameResults(): Observable<GameOutcome[]> {
+    return this.http.get<GameOutcome[]>(`${this.apiUrl}/games/outcomes/`);
+  }
+
+  // ✅ Export data (downloads a file)
+  exportData(): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/export/`, { responseType: 'blob' });
+  }
+}

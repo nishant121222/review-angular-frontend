@@ -203,7 +203,7 @@ export class AdminLogin {
       setTimeout(() => {
         this.isLoading = false;
         this.snackBar.open('Login successful', 'Close', { duration: 2000 });
-        this.router.navigate(['app-admin-dashboard']);
+        this.router.navigate(['admindashboard']);
       }, 800);
     } else {
       Object.keys(this.loginForm.controls).forEach(key => {

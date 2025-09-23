@@ -1947,7 +1947,7 @@ import { GameService} from '../../services/game';
       }
     }
   `]
-})
+})/*
 export class MiniGame {
     @ViewChild('resultContainer') resultContainer!: ElementRef;
     @ViewChild('prizesContainer') prizesContainer!: ElementRef;
@@ -1965,6 +1965,7 @@ export class MiniGame {
     segmentAngle = 360 / this.prizes.length; // This will automatically calculate to ~51.43 degrees
     spinning = false;
     phone!: string;
+    user_id!: number;
     prizeWon: string | null = null;
   
   constructor(
@@ -1975,6 +1976,7 @@ export class MiniGame {
   ) {
     this.route.queryParams.subscribe(params => {
       this.phone = params['phone'] || '';
+      this.user_id = +params['user_id'];  //*
     });
   }
 
@@ -2064,4 +2066,122 @@ export class MiniGame {
       window.open(whatsappUrl, '_blank');
     }
   }
+  */
+ export class MiniGame {
+  @ViewChild('resultContainer') resultContainer!: ElementRef;
+  @ViewChild('prizesContainer') prizesContainer!: ElementRef;
+
+  prizes = [
+    'Free 30min Pedicure with Facial',
+    'BOGO: Hair Spa | Mani | Pedi',
+    'Haircut/Color/Style – ₹1999',
+    'Global Hair – ₹3999',
+    'Highlights – ₹3999',
+    'Men\'s Cut – ₹399',
+    'Waxing – 25% OFF'
+  ];
+  segmentAngle = 360 / this.prizes.length;
+  spinning = false;
+  phone!: string;
+  user_id!: number;
+  prizeWon: string | null = null;
+
+  constructor(
+    private router: Router,
+    private route: ActivatedRoute,
+    private gameService: GameService,
+    private snackBar: MatSnackBar
+  ) {
+    this.route.queryParams.subscribe(params => {
+      this.phone = params['phone'] || '';
+      this.user_id = +params['user_id'] || 0;
+    });
+  }
+
+  spinWheel() {
+    if (this.spinning) return;
+    this.spinning = true;
+    this.prizeWon = null;
+
+    // Call backend /spin/ endpoint to store user's spin
+    this.gameService.spinWheel().subscribe({
+      next: res => {
+        if (res.status && res.data) {
+          // Pick a random prize for frontend animation
+          const selectedIndex = Math.floor(Math.random() * this.prizes.length);
+          const extraSpins = 5 + Math.floor(Math.random() * 4);
+          const degrees = (extraSpins * 360) + (selectedIndex * this.segmentAngle) + (this.segmentAngle / 2);
+
+          if (this.prizesContainer?.nativeElement) {
+            const wheelInner = this.prizesContainer.nativeElement.querySelector('.wheel-inner');
+            if (wheelInner) wheelInner.style.transform = `rotate(${degrees}deg)`;
+          }
+
+          setTimeout(() => {
+            this.prizeWon = this.prizes[selectedIndex];
+            this.snackBar.open(`🎉 You won: ${this.prizeWon}!`, 'Dismiss', { duration: 3000 });
+            this.spinning = false;
+          }, 4500);
+
+        } else {
+          this.snackBar.open(res.message || 'You cannot spin today', 'Dismiss', { duration: 3000 });
+          this.spinning = false;
+        }
+      },
+      error: err => {
+        console.error('Spin error:', err);
+        this.snackBar.open('Error spinning the wheel', 'Dismiss', { duration: 3000 });
+        this.spinning = false;
+      }
+    });
+  }
+
+  captureScreenshot() {
+    if (!this.prizeWon || !this.resultContainer) return;
+    const loadingSnackbar = this.snackBar.open('Preparing your screenshot...', '', { duration: 3000 });
+
+    import('html2canvas').then(html2canvasModule => {
+      const html2canvas = html2canvasModule.default;
+
+      setTimeout(() => {
+        html2canvas(this.resultContainer.nativeElement, { scale: 2, useCORS: true }).then(canvas => {
+          loadingSnackbar.dismiss();
+          this.shareViaWhatsApp(canvas.toDataURL('image/png'));
+        }).catch(err => {
+          console.error('Screenshot error:', err);
+          loadingSnackbar.dismiss();
+          this.snackBar.open('Failed to capture screenshot.', 'Close', { duration: 3000 });
+        });
+      }, 500);
+    });
+  }
+
+  shareViaWhatsApp(imgData: string) {
+    if (!this.phone) {
+      this.snackBar.open('No phone number provided. Cannot share on WhatsApp.', 'Dismiss', { duration: 4000 });
+      return;
+    }
+  
+    const message = `I just won ${this.prizeWon} at this amazing business! Check it out!`;
+    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+    if (isMobile) {
+      const whatsappUrl = `https://wa.me/${this.phone}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+      setTimeout(() => {
+        this.snackBar.open('Please attach the screenshot manually in WhatsApp', 'Dismiss', { duration: 5000 });
+      }, 1000);
+    } else {
+      const downloadLink = document.createElement('a');
+      downloadLink.href = imgData;
+      downloadLink.download = 'my_prize.png';
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
+      document.body.removeChild(downloadLink);
+
+      const whatsappUrl = `https://web.whatsapp.com/send?phone=${this.phone}&text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+    }
+  }
 }
+
