@@ -274,7 +274,7 @@ export class AdminLogin {
       const { username, password } = this.loginForm.value;
       this.adminService.login(username, password).subscribe(success => {
         if (success) {
-          this.router.navigate(['app-phone-verify']);
+          this.router.navigate(['admindashboard']);
         } else {
           alert('Invalid credentials');
         }

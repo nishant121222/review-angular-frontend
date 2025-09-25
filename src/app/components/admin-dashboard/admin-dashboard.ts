@@ -4230,6 +4230,7 @@ export class TruncatePipe implements PipeTransform {
       min-height: 100vh;   /* ✅ updated */
       background: #f5f7fa; 
       font-family: 'Roboto', sans-serif;
+      
     }
     
     .toolbar { 
@@ -4245,13 +4246,11 @@ export class TruncatePipe implements PipeTransform {
     }
     
     .dashboard-content { 
-      flex: 1;              /* ✅ grow to fill remaining space */
-      overflow-y: auto;     /* ✅ scroll if content is long */
-      padding: 24px; 
-      max-width: 1800px; 
-      margin: 0 auto;
+          /* ✅ grow to fill remaining space */
+           /* ✅ scroll if content is long */
+      padding: 24px;
       width: 100%;
-      box-sizing: border-box;
+      
     }
     
     .toolbar-left { 
@@ -4279,8 +4278,9 @@ export class TruncatePipe implements PipeTransform {
     
     
     .stats-grid { 
-      display: grid; 
-      grid-template-columns: repeat(4, 1fr); 
+      display: grid; /*grid-template-columns: repeat(4, 1fr); */
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+ 
       gap: 24px; 
       margin-bottom: 30px; 
     }
@@ -4452,7 +4452,9 @@ export class TruncatePipe implements PipeTransform {
       }
       
       .dashboard-content {
-        padding: 16px;
+        /*padding: 16px;*/
+        max-width: 1800px;
+    margin: 0 auto;
       }
     }
   `]})export class AdminDashboard implements OnInit, AfterViewInit {
